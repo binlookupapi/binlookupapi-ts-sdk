@@ -1,0 +1,28 @@
+{
+  "name": "binlookupapi-sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript SDK for BINLookupAPI",
+  "main": "dist/binlookup-sdk.js",
+  "types": "dist/binlookup-sdk.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "lint": "eslint . --ext .ts"
+  },
+  "keywords": [
+    "bin",
+    "lookup",
+    "card",
+    "payment",
+    "banking",
+    "typescript"
+  ],
+  "author": "BINLookupAPI",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
