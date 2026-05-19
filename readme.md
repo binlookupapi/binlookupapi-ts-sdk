@@ -1,6 +1,6 @@
 # BINLookupAPI TypeScript SDK
 
-A production-ready, fully-typed TypeScript SDK for the BINLookupAPI. Easily retrieve card network, issuing bank, country, and funding information from Bank Identification Numbers (BINs).
+A production-ready, fully-typed TypeScript SDK for BINLookupAPI.com. Easily retrieve card network, issuing bank, country, and funding information from Bank Identification Numbers (BINs).
 
 ---
 
