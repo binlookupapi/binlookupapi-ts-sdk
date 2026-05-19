@@ -28,9 +28,9 @@ A production-ready, fully-typed TypeScript SDK for the BINLookupAPI. Easily retr
 ## Installation
 
 ```bash
-npm install binlookupapi-sdk
+npm i @binlookupapi/binlookupapi-ts-sdk
 # or
-yarn add binlookupapi-sdk
+yarn add @binlookupapi/binlookupapi-ts-sdk
 ```
 
 ---
@@ -38,7 +38,7 @@ yarn add binlookupapi-sdk
 ## Quick Start
 
 ```ts
-import { BINLookupClient, BINLookupAPIError } from './binlookup-sdk';
+import { BINLookupClient, BINLookupAPIError } from '@binlookupapi/binlookupapi-ts-sdk';
 
 const client = new BINLookupClient({
   apiKey: 'your_api_key_here'
