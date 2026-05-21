@@ -1,6 +1,6 @@
 {
   "name": "@binlookupapi/binlookupapi-ts-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Official TypeScript SDK for BINLookupAPI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,6 +22,10 @@
   ],
   "author": "BINLookupAPI",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/binlookupapi/binlookupapi-ts-sdk"
+  },
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"

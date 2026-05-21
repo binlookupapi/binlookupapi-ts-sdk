@@ -84,6 +84,8 @@ export class BINLookupAPIError extends Error {
 
 // --- SDK Client ---
 
+const USER_AGENT = 'binlookupapi-ts-sdk/1.0.2';
+
 export interface SDKConfig {
   apiKey: string;
   baseUrl?: string;
@@ -144,6 +146,7 @@ export class BINLookupClient {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
+          'User-Agent': USER_AGENT,
         },
         body: JSON.stringify(body),
         signal: controller.signal,

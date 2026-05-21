@@ -84,6 +84,21 @@ describe('Error handling', () => {
   });
 });
 
+describe('Request headers', () => {
+  it('sends the correct User-Agent header on every request', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200, { data: {} }, {
+      'X-Quota-Limit': '100',
+      'X-Quota-Remaining': '99',
+      'X-Quota-Reset': '1700000000',
+    }));
+
+    await client.lookup(424671);
+
+    const headers = mockFetch.mock.calls[0][1].headers;
+    expect(headers['User-Agent']).toBe('binlookupapi-ts-sdk/1.0.2');
+  });
+});
+
 describe('Timeout', () => {
   it('rejects with an error if the request exceeds the configured timeout', async () => {
     // The client aborts via AbortController; fetch throws an AbortError.
