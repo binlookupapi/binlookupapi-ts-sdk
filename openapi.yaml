@@ -1,0 +1,307 @@
+openapi: 3.1.0
+info:
+  title: BINLookupAPI
+  description: |
+    A RESTful API for payment card BIN (Bank Identification Number) lookup.
+    Use it to identify card networks and issuing banks, detect card types (credit, debit, prepaid),
+    verify country of issuance, enhance fraud prevention, and improve payment routing.
+
+    ## Test Mode
+    Development accounts return mock responses. The data structure matches production, but values
+    are sample data. Upgrade to a paid plan for real BIN data.
+
+    ### Test BINs
+    | BIN | Scheme | Funding | Country | Notes |
+    |-----|--------|---------|---------|-------|
+    | `45839201` | Visa | Credit | Japan | Minimal issuer data |
+    | `52741836` | Mastercard | Credit | Mauritius | Full issuer data |
+    | `41928374` | Visa | Credit | Azerbaijan | Commercial card |
+    | `55012847` | Mastercard | Prepaid | Cameroon | Prepaid card |
+
+    All other BINs return the default mock response (Polish Visa debit card).
+  version: 1.0.0
+  contact:
+    url: https://binlookupapi.com/contact/
+
+servers:
+  - url: https://api.binlookupapi.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /v1/bin:
+    post:
+      summary: Look up a BIN
+      description: |
+        Returns card metadata for a given Bank Identification Number (BIN) — the first 4 to 8
+        digits of a payment card number. Use 8 digits when available for better accuracy.
+      operationId: lookupBin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BinLookupRequest'
+            example:
+              number: 42467101
+      responses:
+        '200':
+          description: Successful BIN lookup
+          headers:
+            X-Quota-Limit:
+              description: Total daily request allowance for the plan
+              schema:
+                type: integer
+              example: 10000
+            X-Quota-Remaining:
+              description: Requests remaining for the current day
+              schema:
+                type: integer
+              example: 7482
+            X-Quota-Reset:
+              description: Unix timestamp (seconds) when the quota resets
+              schema:
+                type: integer
+                format: int64
+              example: 1706400000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinLookupResponse'
+              example:
+                data:
+                  bin: "42467101"
+                  scheme: visa
+                  funding: debit
+                  brand: VISA
+                  category: CLASSIC
+                  country:
+                    code: PL
+                    name: POLAND
+                  issuer:
+                    name: ING BANK SLASKI SA
+                    website: null
+                    phone: null
+                  currency: PLN
+                  prepaid: false
+                  commercial: false
+        '400':
+          description: Bad request — invalid or missing request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: BAD_REQUEST
+                message: The `number` field must be an integer between 4 and 8 digits.
+        '401':
+          description: Unauthorized — missing, invalid, revoked, or expired API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: UNAUTHORIZED
+                message: Missing, invalid, revoked, or expired API key
+        '402':
+          description: Payment required — no active subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: PAYMENT_REQUIRED
+                message: No active subscription. Subscribe to a plan in the dashboard under Billing.
+        '403':
+          description: Forbidden — API key lacks required permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: FORBIDDEN
+                message: API key lacks required permissions.
+        '404':
+          description: Not found — the requested BIN was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: NOT_FOUND
+                message: The requested BIN was not found.
+        '429':
+          description: Quota exceeded — daily request quota exceeded
+          headers:
+            X-Quota-Limit:
+              description: Total daily request allowance for the plan
+              schema:
+                type: integer
+            X-Quota-Remaining:
+              description: Always 0 when quota is exceeded
+              schema:
+                type: integer
+                enum: [0]
+            X-Quota-Reset:
+              description: Unix timestamp (seconds) when the quota resets
+              schema:
+                type: integer
+                format: int64
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: QUOTA_EXCEEDED
+                message: Daily request quota exceeded
+        '502':
+          description: Service error — internal error, try again later
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: SERVICE_ERROR
+                message: An internal error occurred. Try again later.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API key passed as a Bearer token. Create keys in the dashboard under **API Keys**.
+        The full key is shown only once at creation — store it securely.
+
+  schemas:
+    BinLookupRequest:
+      type: object
+      required:
+        - number
+      properties:
+        number:
+          type: integer
+          minimum: 1000
+          maximum: 99999999
+          description: |
+            The BIN to look up — the first 4 to 8 digits of a payment card number.
+            Must be an integer between 4 and 8 digits. Do not pass the full card number.
+          example: 42467101
+
+    BinLookupResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/BinData'
+
+    BinData:
+      type: object
+      required:
+        - bin
+        - scheme
+        - funding
+        - prepaid
+        - commercial
+        - country
+        - issuer
+      properties:
+        bin:
+          type: string
+          description: The BIN that was looked up
+          example: "42467101"
+        scheme:
+          type: string
+          enum: [visa, mastercard, amex, discover, jcb, unionpay, diners, unknown]
+          description: Card network
+          example: visa
+        funding:
+          type: string
+          enum: [credit, debit, prepaid, unknown]
+          description: Funding type
+          example: debit
+        brand:
+          type: string
+          nullable: true
+          description: Card brand or product name
+          example: VISA
+        category:
+          type: string
+          nullable: true
+          description: Card category
+          example: CLASSIC
+        country:
+          $ref: '#/components/schemas/Country'
+        issuer:
+          $ref: '#/components/schemas/Issuer'
+        currency:
+          type: string
+          nullable: true
+          description: ISO 4217 currency code
+          example: PLN
+        prepaid:
+          type: boolean
+          description: Whether the card is prepaid
+          example: false
+        commercial:
+          type: boolean
+          description: Whether the card is a commercial/business card
+          example: false
+
+    Country:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: PL
+        name:
+          type: string
+          description: Country name
+          example: POLAND
+
+    Issuer:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: Issuing bank name
+          example: ING BANK SLASKI SA
+        website:
+          type: string
+          nullable: true
+          description: Issuing bank website
+          example: null
+        phone:
+          type: string
+          nullable: true
+          description: Issuing bank phone number
+          example: null
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum:
+            - BAD_REQUEST
+            - UNAUTHORIZED
+            - PAYMENT_REQUIRED
+            - FORBIDDEN
+            - NOT_FOUND
+            - QUOTA_EXCEEDED
+            - SERVICE_ERROR
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error description
