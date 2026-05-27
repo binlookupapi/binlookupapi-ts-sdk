@@ -26,7 +26,7 @@ jobs:
         run: |
           mkdir -p generated && npx @hey-api/openapi-ts \
             -c @hey-api/client-fetch \
-            -i https://raw.githubusercontent.com/binlookupapi/binlookupapi-ts-sdk/refs/heads/main/openapi.yaml \
+            -i https://binlookupapi.com/openapi.yaml \
             -o gen
 
       - name: Commit changes
